@@ -52,7 +52,6 @@ class Stop {
         this.hasConnections = data.hasConnections;
         this.connectionCount = data.connections.length;
         this.accessibilityLevel = data.accessibilityLevel;
-        this.isTerminusOfLine = data.isTerminusOfLine;
         this.terminusFor = data.terminusFor;
         this.coordonates = data.coordonates;
     }
@@ -68,6 +67,7 @@ class LineStop extends Stop {
         this.lineID = data.lineID;
         this.previous = data.previous;
         this.next = data.next;
+        this.isTerminusOfLine = data.isTerminusOfLine;
     }
 }
 
@@ -121,7 +121,7 @@ function loadStops() {
                         connections: [lines.find(line => line.lineID === stop.idrefligc)],
                         hasConnections: false,
                         isAccessible: undefined,
-                        isTerminusOfLine: terminusNames.some(term => stop[term] !== '0'),
+                        
                         terminusFor: terminusNames.filter(term => stop[term] !== '0').map(term => stop[term]),
                         coordonates: stop.geo_point_2d
                     })
@@ -170,8 +170,8 @@ function loadStops() {
 
         //change line.termiusFor nameUpper format to the actual line object 
         lines.forEach(line => {
-            line.terminus.forEach(terminus => {
-                terminus.terminusFor = terminus.terminusFor.map(terminus => lines.find(line => line.name === terminus));
+            line.stops.forEach(stop => {
+                stop.isTerminusOfLine = stop.terminusFor.includes(line.nameUpper)
             });
         });
 
