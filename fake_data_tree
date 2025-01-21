@@ -1,3 +1,5 @@
+// LineStop est une classe etendu de Stop
+
 let network = {
     lines: [
         {
@@ -5,7 +7,26 @@ let network = {
             color: String,
             mode: String,
             lineID: Number,
-            stops: [ ...LineStop ],
+            stops: [ ...{ // LineStop
+                name: String,
+                subname: String,
+                stationID: Number,
+                connections: [ ...Line ],
+                hasConnections: Boolean,
+                connectionCount: Number,
+                accessibilityLevel: Number,
+                terminusFor: [ ...Line ],
+                coordinates: {
+                    lon: Number,
+                    lat: Number
+                },
+                line: String,
+                color: String,
+                lineID: Number,
+                previous: [ ...LineStop ],
+                next: [ ...LineStop ],
+                isTerminusOfLine: Boolean
+            } ],
             picto: String,
             shape: String,
             isAccessible: Boolean,
