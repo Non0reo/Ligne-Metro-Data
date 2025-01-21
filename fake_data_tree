@@ -1,0 +1,34 @@
+let network = {
+    lines: [
+        {
+            name: String,
+            color: String,
+            mode: String,
+            lineID: Number,
+            stops: [ ...LineStop ],
+            picto: String,
+            shape: String,
+            isAccessible: Boolean,
+            stopCount: Number,
+            nameUpper: String,
+            terminus: [ ...LineStop ],
+            sections: [ ...Sections ]
+        }
+    ],
+    stops: [
+        {
+            name: String,
+            subname: String,
+            stationID: Number,
+            connections: [ ...Line ],
+            hasConnections: Boolean,
+            connectionCount: Number,
+            accessibilityLevel: Number,
+            terminusFor: [ ...Line ],
+            coordinates: {
+                lon: Number,
+                lat: Number
+            }
+        }
+    ],
+};

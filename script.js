@@ -6,7 +6,6 @@ class Line {
         this.lineID = data.lineID;
         this.stops = data.stops;
         this.picto = data.picto;
-        this.shape = data.shape;
         this.isAccessible = data.isAccessible;
         this.stopCount = data.stopCount;
         this.nameUpper = data.nameUpper;
@@ -51,7 +50,6 @@ fetch('./lignes.json')
     .then((response) => response.json())
     .then((json) => {
         let linesRaw = json.filter(line => acceptedTransportModes.includes(line.transportmode) && line.transportsubmode !== 'regionalRail');
-        console.log(linesRaw);
         linesRaw.forEach(line => {
             lines.push(
                 new Line({
@@ -61,7 +59,6 @@ fetch('./lignes.json')
                     picto: line.picto,
                     mode: line.transportmode,
                     isAccessible: line.accessibility,
-                    shape: undefined,
                 })
             )
         });
@@ -184,15 +181,12 @@ function loadShapes(line) {
         });
 
         line.sections = sectionList;
-        
-
-        console.log(line.name, line.stops)
         line.sections.forEach((section, i) => {
             let lineStop1 = line.stops.find(stop => stop.stationID === section.fromStopID);
             let lineStop2 = line.stops.find(stop => stop.stationID === section.toStopID);
 
-            if(lineStop1) lineStop1.next.push(lineStop2);
-            if(lineStop2) lineStop2.previous.push(lineStop1);
+            if(lineStop1 && lineStop1 != lineStop2) lineStop1.next.push(lineStop2);
+            if(lineStop2 && lineStop1 != lineStop2) lineStop2.previous.push(lineStop1);
         });
 
     });
