@@ -1,32 +1,3 @@
-/* class Arret {
-    constructor(data) {
-        this.previous = data.previous;
-        this.next = data.next;
-        this.name = data.name;
-        this.subname = data.subname;
-        this.line = data.line;
-        this.color = data.color;
-        this.connections = data.connections;
-        this.hasConnections = data.hasConnections;
-        this.isAccessible = data.isAccessible;
-        this.isTerminus = data.isTerminus;
-    }
-}
-
-class Line {
-    constructor(data) {
-        
-        this.color = data.color;
-        this.stops = data.stops;
-    }
-}
-
-
-const stops = {
-    line: ,
-    previous: Arret()
-} */
-
 class Line {
     constructor(data) {
         this.name = data.name;
@@ -56,8 +27,6 @@ class Stop {
         this.terminusFor = data.terminusFor;
         this.coordinates = data.coordinates;
     }
-
-    
 }
 
 class LineStop extends Stop {
@@ -73,9 +42,7 @@ class LineStop extends Stop {
 }
 
 
-
 const acceptedTransportModes = ['metro', 'tramway', 'rail', 'funicular'];
-
 
 let lines = [];
 let stops = [];
@@ -108,10 +75,8 @@ function loadStops() {
     .then((response) => response.json())
     .then((json) => {
         const terminusNames = ['termetro', 'tertram', 'tertrain', 'terrer', 'terval'];
-
         let stopsRaw = json.filter(stop => lines.some(line => line.lineID === stop.idrefligc));
-         console.log(stopsRaw);
-        //add stops to the stops array. Each stop need to appear one time only. If a stop appears multiple times, reference every lines that are stopping there in the connections array.
+
         stopsRaw.forEach((stop, i) => {
             if (!stops.some(s => s.stationID === stop.id_ref_zdc)) {
                 stops.push(
@@ -160,8 +125,6 @@ function loadStops() {
 
             loadShapes(line);
 
-
-            
             //J'en ai chié pour trouver les lignes d'en dessous        
             const firstStop = line.stops[0];
             let possibleStopList = stopsRaw.filter(stop => firstStop.stationID === stop.id_ref_zdc && firstStop.connections.some(connection => connection.name === line.name));
@@ -175,12 +138,8 @@ function loadStops() {
                 stop.isTerminusOfLine = stop.terminusFor.includes(line.nameUpper)
             });
 
-            //set line terminus
-            line.terminus = line.stops.filter(stop => stop.isTerminusOfLine);
-
+            line.terminus = line.stops.filter(stop => stop.isTerminusOfLine); //set line terminus
         });
-
-        console.log(lines);
         
     });
 }
@@ -202,65 +161,39 @@ function loadShapes(line) {
     fetch('./shapes.json')
     .then((response) => response.json())
     .then((json) => {
-        //lines.forEach(line => {
-            let shapeRaw = json.filter(shape => shape.idrefligc === line.lineID)/* [0].shape.geometry.coordinates */;
-            // console.log(shapeRaw, line.stopCount - 1);
-            //console.log(line.name, shapeRaw);
-            //console.log(line.name, line.stopCount, shapeRaw.filter(array => array.length === line.stopCount).length !== 0, shapeRaw, shapeRaw.filter(array => array.length === line.stopCount));
 
-            console.log(line.name, shapeRaw.length);
-            let sectionList = [];
+        let shapeRaw = json.filter(shape => shape.idrefligc === line.lineID);
+        let sectionList = [];
 
-            shapeRaw.forEach(shape => {
-                const coordinates = shape.geo_shape.geometry.coordinates;
+        shapeRaw.forEach(shape => {
+            const coordinates = shape.geo_shape.geometry.coordinates;
 
-                let section = {
-                    from: coordinates[0],
-                    to: coordinates[coordinates.length - 1],
-                    fromStop: getLineStop(stopFromGeoPoint(coordinates[0][0], coordinates[0][1]), line),
-                    toStop: getLineStop(stopFromGeoPoint(coordinates[coordinates.length - 1][0], coordinates[coordinates.length - 1][1]), line),
-                    get fromStopID() {
-                        if(this.fromStop) return this.fromStop.stationID;
-                    },
-                    get toStopID() {
-                        if(this.toStop) return this.toStop.stationID;
-                    }
+            let section = {
+                from: coordinates[0],
+                to: coordinates[coordinates.length - 1],
+                fromStop: getLineStop(stopFromGeoPoint(coordinates[0][0], coordinates[0][1]), line),
+                toStop: getLineStop(stopFromGeoPoint(coordinates[coordinates.length - 1][0], coordinates[coordinates.length - 1][1]), line),
+                get fromStopID() {
+                    if(this.fromStop) return this.fromStop.stationID;
+                },
+                get toStopID() {
+                    if(this.toStop) return this.toStop.stationID;
                 }
-                sectionList.push(section);
+            }
+            sectionList.push(section);
+        });
 
-                //set previous and next stops. previous and next are arrays because some stops have multiple connections
-                
-            });
+        line.sections = sectionList;
+        
 
-            line.sections = sectionList;
-            
+        console.log(line.name, line.stops)
+        line.sections.forEach((section, i) => {
+            let lineStop1 = line.stops.find(stop => stop.stationID === section.fromStopID);
+            let lineStop2 = line.stops.find(stop => stop.stationID === section.toStopID);
 
-        //});
-
-        //lines.forEach(line => {
-            console.log(line.name, line.stops)
-            line.sections.forEach((section, i) => {
-                let lineStop1 = line.stops.find(stop => stop.stationID === section.fromStopID);
-                let lineStop2 = line.stops.find(stop => stop.stationID === section.toStopID);
-
-                console.log(section, lineStop1, lineStop2);
-
-                if(lineStop1) lineStop1.next.push(lineStop2);
-                if(lineStop2) lineStop2.previous.push(lineStop1);
-
-                console.log(i)
-
-                // let previous = line.sections.filter(s => s.toStopID === section.fromStopID);
-                // let next = line.sections.filter(s => s.fromStopID === section.toStopID);
-                // section.previous = previous;
-                // section.next = next;
-                // console.log(previous, next);
-
-                // if(section.fromStop) section.fromStop.previous.push(...previous);
-                // if(section.toStop) section.toStop.next.push(...next);
-            });
-        //});
-
+            if(lineStop1) lineStop1.next.push(lineStop2);
+            if(lineStop2) lineStop2.previous.push(lineStop1);
+        });
 
     });
 }
@@ -288,11 +221,6 @@ stopFromGeoPoint = (lon, lat) => {
     });
     return closestStop;
 }
-
-createUpperName = (name, mode) => {
-    //if the mode is rail, 
-}
-
 
 getLineStop = (stop, line) => {
     return line.stops.find(s => s.stationID === stop.stationID);
