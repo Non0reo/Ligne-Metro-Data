@@ -30,26 +30,30 @@ const stops = {
 class Line {
     constructor(data) {
         this.name = data.name;
-        this.lineID = data.lineID;
         this.color = data.color;
         this.mode = data.mode;
+        this.lineID = data.lineID;
         this.stops = data.stops;
         this.picto = data.picto;
         this.shape = data.shape;
-        this.stopCount = undefined;
+        this.isAccessible = data.isAccessible;
+        this.stopCount = data.stopCount;
+        this.nameUpper = data.nameUpper;
+        this.terminus = data.terminus;
     }
 }
 
 class Stop {
     constructor(data) {
         this.name = data.name;
-        this.stationID = data.stationID;
         this.subname = data.subname;
+        this.stationID = data.stationID;
         this.connections = data.connections;
         this.hasConnections = data.hasConnections;
         this.connectionCount = data.connections.length;
-        this.isAccessible = data.isAccessible;
-        this.isTerminus = data.isTerminus;
+        this.accessibilityLevel = data.accessibilityLevel;
+        this.isTerminusOfLine = data.isTerminusOfLine;
+        this.terminusFor = data.terminusFor;
         this.coordonates = data.coordonates;
     }
 
@@ -79,6 +83,7 @@ fetch('./lignes.json')
     .then((response) => response.json())
     .then((json) => {
         let linesRaw = json.filter(line => acceptedTransportModes.includes(line.transportmode) && line.transportsubmode !== 'regionalRail');
+        console.log(linesRaw);
         linesRaw.forEach(line => {
             lines.push(
                 new Line({
@@ -87,6 +92,7 @@ fetch('./lignes.json')
                     color: line.colourweb_hexa,
                     picto: line.picto,
                     mode: line.transportmode,
+                    isAccessible: line.accessibility,
                     shape: undefined,
                 })
             )
@@ -100,33 +106,41 @@ function loadStops() {
     fetch('./stops.json')
     .then((response) => response.json())
     .then((json) => {
-        let stopsRaw = json.filter(stop => lines.some(line => line.lineID === stop.idrefligc));
+        const terminusNames = ['termetro', 'tertram', 'tertrain', 'terrer', 'terval'];
 
+        let stopsRaw = json.filter(stop => lines.some(line => line.lineID === stop.idrefligc));
+         console.log(stopsRaw);
         //add stops to the stops array. Each stop need to appear one time only. If a stop appears multiple times, reference every lines that are stopping there in the connections array.
-        stopsRaw.forEach(stop => {
-            if (!stops.some(s => s.stationID === stop.id_ref_zda)) {
+        stopsRaw.forEach((stop, i) => {
+            if (!stops.some(s => s.stationID === stop.id_ref_zdc)) {
                 stops.push(
                     new Stop({
                         name: stop.nom_gares,
-                        stationID: stop.id_ref_zda,
                         subname: stop.nom_so_gar,
-                        connections: lines.filter(line => line.lineID === stop.idrefligc),
+                        stationID: stop.id_ref_zdc,
+                        connections: [lines.find(line => line.lineID === stop.idrefligc)],
                         hasConnections: false,
-                        isAccessible: stop.isaccessible,
-                        isTerminus: stop.isterminus,
+                        isAccessible: undefined,
+                        isTerminusOfLine: terminusNames.some(term => stop[term] !== '0'),
+                        terminusFor: terminusNames.filter(term => stop[term] !== '0').map(term => stop[term]),
                         coordonates: stop.geo_point_2d
                     })
                 );
-            } else {
-                let declaredStop = stops.find(s => s.stationID === stop.id_ref_zda);
+            }
+            else {
+                let declaredStop = stops.find(s => s.stationID === stop.id_ref_zdc);
                 declaredStop.connections.push(lines.find(line => line.lineID === stop.idrefligc));
                 declaredStop.connectionCount = declaredStop.connections.length;
+                console.log(declaredStop.terminus)
+                declaredStop.terminusFor.push(...terminusNames.filter(term => stop[term] !== '0').map(term => stop[term]));
                 declaredStop.hasConnections = true;
             }
-        });
 
+        });
+        loadAccessiblity();
 
         lines.forEach(line => {
+
             //transform stops into LineStop objects
             line.stops = stops.filter(stop => stop.connections.some(connection => connection.lineID === line.lineID)).map(stop => {
 
@@ -145,9 +159,37 @@ function loadStops() {
             });
 
             line.stopCount = line.stops.length;
+            line.terminus = line.stops.filter(stop => stop.isTerminusOfLine && stop.terminusFor.includes(line.name));
+
+            //J'en ai chié pour trouver les lignes d'en dessous        
+            const firstStop = line.stops[0];
+            let possibleStopList = stopsRaw.filter(stop => firstStop.stationID === stop.id_ref_zdc && firstStop.connections.some(connection => connection.name === line.name));
+            line.nameUpper = possibleStopList.filter(stop => stop.idrefligc === line.lineID)[0].res_com;
+
         });
+
+        //change line.termiusFor nameUpper format to the actual line object 
+        lines.forEach(line => {
+            line.terminus.forEach(terminus => {
+                terminus.terminusFor = terminus.terminusFor.map(terminus => lines.find(line => line.name === terminus));
+            });
+        });
+
         console.log(lines);
         loadShapes();
+    });
+}
+
+async function loadAccessiblity() {
+    await fetch('./accessibility.json')
+    .then((response) => response.json())
+    .then((json) => {
+        stops.forEach(stop => {
+            let accessibilityRaw = json.filter(accessibility => stop.stationID.toString() === accessibility.stop_point_id.replace('stop_point:IDFM:monomodalStopPlace:', ''))[0];
+            if (accessibilityRaw) {
+                stop.accessibilityLevel = accessibilityRaw.accessibility_level_id;
+            }
+        });
     });
 }
 
@@ -155,11 +197,27 @@ function loadShapes() {
     fetch('./shapes.json')
     .then((response) => response.json())
     .then((json) => {
-        console.log(json);
         lines.forEach(line => {
-            let shapeRaw = json.filter(shape => shape.route_id.replace('IDFM:', '') === line.lineID)[0].shape.geometry.coordinates;
-            console.log(line.name, line.stopCount, shapeRaw.filter(array => array.length === line.stopCount).length !== 0, shapeRaw, shapeRaw.filter(array => array.length === line.stopCount));
-            line.shape = shapeRaw;
+            let shapeRaw = json.filter(shape => shape.idrefligc === line.lineID)/* [0].shape.geometry.coordinates */;
+            // console.log(shapeRaw, line.stopCount - 1);
+            //console.log(line.name, shapeRaw);
+            //console.log(line.name, line.stopCount, shapeRaw.filter(array => array.length === line.stopCount).length !== 0, shapeRaw, shapeRaw.filter(array => array.length === line.stopCount));
+
+            
+
+            shapeRaw.forEach(shape => {
+                const coordinates = shape.geo_shape.geometry.coordinates;
+
+                let section = {
+                    from: coordinates[0],
+                    to: coordinates[coordinates.length - 1],
+                    fromStop: stopFromGeoPoint(coordinates[0][0], coordinates[0][1]),
+                    toStop: stopFromGeoPoint(coordinates[coordinates.length - 1][0], coordinates[coordinates.length - 1][1])
+                }
+
+                //console.log(section);
+            });
+
         });
 
 
@@ -169,4 +227,27 @@ function loadShapes() {
 
 findStopFromName = (name) => {
     return stops.find(stop => stop.name === name);
+}
+
+findLineFromName = (name) => {
+    return lines.find(line => line.name === name);
+}
+
+//get the closest stop from a geopoint
+stopFromGeoPoint = (lon, lat) => {
+    let closestStop = findStopFromName('Les Halles');
+    let closestDistance = Math.sqrt(Math.pow(lat - closestStop.coordonates.lat, 2) + Math.pow(lon - closestStop.coordonates.lon, 2));
+    stops.forEach(stop => {
+        let distance = Math.sqrt(Math.pow(lat - stop.coordonates.lat, 2) + Math.pow(lon - stop.coordonates.lon, 2));
+        if (distance < closestDistance) {
+            //console.log('new closest stop', stop);
+            closestDistance = distance;
+            closestStop = stop;
+        }
+    });
+    return closestStop;
+}
+
+createUpperName = (name, mode) => {
+    //if the mode is rail, 
 }
