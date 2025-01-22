@@ -1,0 +1,26 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #292C33;
+}
+
+
+
+div#card {
+    display: flex;
+    width: 670px;
+    height: 255px;
+    padding-left: 40px;
+    align-items: center;
+    gap: 50px;
+    flex-shrink: 0;
+    background-color: white;
+}
+
+
+div#connection {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+}

@@ -45,7 +45,7 @@ const acceptedTransportModes = ['metro', 'tramway', 'rail', 'funicular'];
 let lines = [];
 let stops = [];
 
-fetch('./lignes.json')
+fetch('js/lignes.json')
     .then((response) => response.json())
     .then((json) => {
         let linesRaw = json.filter(line => acceptedTransportModes.includes(line.transportmode) && line.transportsubmode !== 'regionalRail');
@@ -67,7 +67,7 @@ fetch('./lignes.json')
 
 
 function loadStops() {
-    fetch('./stops.json')
+    fetch('js/stops.json')
     .then((response) => response.json())
     .then((json) => {
         const terminusNames = ['termetro', 'tertram', 'tertrain', 'terrer', 'terval'];
@@ -98,17 +98,21 @@ function loadStops() {
             }
 
         });
+
         loadAccessiblity();
 
         lines.forEach(line => {
+            console.log(line);
 
             //transform stops into LineStop objects
             line.stops = stops.filter(stop => stop.connections.some(connection => connection.lineID === line.lineID)).map(stop => {
 
-                //remove from ...stops.connections the current line
-                // let connection = stop.connections.filter(connection => connection.lineID !== line.lineID);
-                // stop.connections = connection;
-                
+                //remove line from stop connections|
+                // console.log(999, stop.connections);
+                // const index = stop.connections.indexOf(line);
+                // stop.connections.splice(index, 1);
+                // console.log(stop.connections);
+
                 return new LineStop({
                     ...stop,
                     lineID: line.lineID,
@@ -141,7 +145,7 @@ function loadStops() {
 }
 
 async function loadAccessiblity() {
-    await fetch('./accessibility.json')
+    await fetch('js/accessibility.json')
     .then((response) => response.json())
     .then((json) => {
         stops.forEach(stop => {
@@ -154,7 +158,7 @@ async function loadAccessiblity() {
 }
 
 function loadShapes(line) {
-    fetch('./shapes.json')
+    fetch('js/shapes.json')
     .then((response) => response.json())
     .then((json) => {
 
@@ -200,6 +204,10 @@ getLineFromName = (name) => {
     return lines.find(line => line.name === name);
 }
 
+getLineStop = (stop, line) => { 
+    return line.stops.find(s => s.stationID === stop.stationID);
+}
+
 //get the closest stop from a geopoint
 stopFromGeoPoint = (lon, lat) => {
     let closestStop = getStopFromName('Les Halles');
@@ -214,15 +222,6 @@ stopFromGeoPoint = (lon, lat) => {
     });
     return closestStop;
 }
-
-getLineStop = (stop, line) => {
-    return line.stops.find(s => s.stationID === stop.stationID);
-}
-
-getLineFromUpperName = (name) => {
-    return lines.find(line => line.upperName === name);
-}
-
 
 
 lineUpperName = (line) => {
