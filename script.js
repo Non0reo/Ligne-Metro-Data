@@ -8,7 +8,6 @@ class Line {
         this.picto = data.picto;
         this.isAccessible = data.isAccessible;
         this.stopCount = data.stopCount;
-        this.nameUpper = data.nameUpper;
         this.terminus = data.terminus;
         this.sections = [];
     }
@@ -85,7 +84,7 @@ function loadStops() {
                         hasConnections: false,
                         isAccessible: undefined,
                         
-                        terminusFor: terminusNames.filter(term => stop[term] !== '0').map(term => stop[term]),
+                        terminusFor: terminusNames.filter(term => stop[term] !== '0').map(term => getLineFromName(lineUpperName(stop[term])) ),
                         coordinates: stop.geo_point_2d
                     })
                 );
@@ -94,7 +93,7 @@ function loadStops() {
                 let declaredStop = stops.find(s => s.stationID === stop.id_ref_zdc);
                 declaredStop.connections.push(lines.find(line => line.lineID === stop.idrefligc));
                 declaredStop.connectionCount = declaredStop.connections.length;
-                declaredStop.terminusFor.push(...terminusNames.filter(term => stop[term] !== '0').map(term => stop[term]));
+                declaredStop.terminusFor.push(...terminusNames.filter(term => stop[term] !== '0').map(term => getLineFromName(lineUpperName(stop[term])) ));
                 declaredStop.hasConnections = true;
             }
 
@@ -123,16 +122,16 @@ function loadStops() {
             loadShapes(line);
 
             //J'en ai chié pour trouver les lignes d'en dessous        
-            const firstStop = line.stops[0];
-            let possibleStopList = stopsRaw.filter(stop => firstStop.stationID === stop.id_ref_zdc && firstStop.connections.some(connection => connection.name === line.name));
-            line.nameUpper = possibleStopList.filter(stop => stop.idrefligc === line.lineID)[0].res_com;
+            // const firstStop = line.stops[0];
+            // let possibleStopList = stopsRaw.filter(stop => firstStop.stationID === stop.id_ref_zdc && firstStop.connections.some(connection => connection.name === line.name));
+            // line.upperName = possibleStopList.filter(stop => stop.idrefligc === line.lineID)[0].res_com;
             line.stopCount = line.stops.length;
         });
 
 
         lines.forEach(line => {
             line.stops.forEach(stop => {
-                stop.isTerminusOfLine = stop.terminusFor.includes(line.nameUpper)
+                stop.isTerminusOfLine = stop.terminusFor.includes(line)
             });
 
             line.terminus = line.stops.filter(stop => stop.isTerminusOfLine); //set line terminus
@@ -193,17 +192,17 @@ function loadShapes(line) {
 }
 
 
-findStopFromName = (name) => {
+getStopFromName = (name) => {
     return stops.find(stop => stop.name === name);
 }
 
-findLineFromName = (name) => {
+getLineFromName = (name) => {
     return lines.find(line => line.name === name);
 }
 
 //get the closest stop from a geopoint
 stopFromGeoPoint = (lon, lat) => {
-    let closestStop = findStopFromName('Les Halles');
+    let closestStop = getStopFromName('Les Halles');
     let closestDistance = Math.sqrt(Math.pow(lat - closestStop.coordinates.lat, 2) + Math.pow(lon - closestStop.coordinates.lon, 2));
     stops.forEach(stop => {
         let distance = Math.sqrt(Math.pow(lat - stop.coordinates.lat, 2) + Math.pow(lon - stop.coordinates.lon, 2));
@@ -218,4 +217,49 @@ stopFromGeoPoint = (lon, lat) => {
 
 getLineStop = (stop, line) => {
     return line.stops.find(s => s.stationID === stop.stationID);
+}
+
+getLineFromUpperName = (name) => {
+    return lines.find(line => line.upperName === name);
+}
+
+
+
+lineUpperName = (line) => {
+    const lineNames = {
+        'METRO 1': '1',
+        'METRO 2': '2',
+        'METRO 3': '3',
+        'METRO 3bis': '3 Bis',
+        'METRO 4': '4',
+        'METRO 5': '5',
+        'METRO 6': '6',
+        'METRO 7': '7',
+        'METRO 7bis': '7 Bis',
+        'METRO 8': '8',
+        'METRO 9': '9',
+        'METRO 10': '10',
+        'METRO 11': '11',
+        'METRO 12': '12',
+        'METRO 13': '13',
+        'METRO 14': '14',
+        'RER A': 'RER A',
+        'RER B': 'RER B',
+        'RER C': 'RER C',
+        'RER D': 'RER D',
+        'RER E': 'RER E',
+        'TRAIN H': 'Transilien H',
+        'TRAIN J': 'Transilien J',
+        'TRAIN K': 'Transilien K',
+        'TRAIN L': 'Transilien L',
+        'TRAIN N': 'Transilien N',
+        'TRAIN P': 'Transilien P',
+        'TRAIN R': 'Transilien R',
+        'TRAIN U': 'Transilien U',
+        'TRAIN V': 'RER C',
+        'CDGVAL': 'CDG VAL',
+        'ORLYVAL': 'ORLYVAL'
+    }
+
+    return lineNames[line];
 }
