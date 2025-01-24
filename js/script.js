@@ -56,7 +56,7 @@ fetch('js/lignes.json')
                     lineID: line.id_line,
                     color: line.colourweb_hexa,
                     picto: line.picto,
-                    mode: line.transportmode,
+                    mode: line.shortname_groupoflines.includes('RER') ? 'rer' : line.transportmode,
                     isAccessible: line.accessibility,
                 })
             )

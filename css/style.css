@@ -1,5 +1,28 @@
+:root {
+    --cardWidth: 670px;
+    --cardHeight: 200px;
+}
+
+@font-face {
+    font-family: 'IDF Voyager';
+    src: url('../assets/fonts/idfm/IDFVoyageur-Bold.ttf');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'IDF Voyager';
+    src: url('../assets/fonts/idfm/IDFVoyageur-Medium.ttf');
+    font-weight: medium;
+}
+
+@font-face {
+    font-family: 'IDF Voyager';
+    src: url('../assets/fonts/idfm/IDFVoyageur-Regular.ttf');
+    font-weight: normal;
+}
+
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'IDF Voyager';
     background-color: #292C33;
 }
 
@@ -7,8 +30,8 @@ body {
 
 div#card {
     display: flex;
-    width: 670px;
-    height: 255px;
+    width: var(--cardWidth);
+    height: var(--cardHeight);
     padding-left: 40px;
     align-items: center;
     gap: 50px;
@@ -16,11 +39,76 @@ div#card {
     background-color: white;
 }
 
+.stop {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 70px;
+}
 
-div#connection {
+.connection {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
     gap: 10px;
+}
+
+.line-color {
+    min-height: var(--cardHeight);
+    width: 18px;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.station-color {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ffffff;
+    transform: scale(5.0);
+    border: solid 2px black;
+}
+
+
+.connect_transport {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.connected-line, .connected-symbol {
+    width: 45px;
+    height: 45px;
+}
+
+.connected-symbol {
+    color: blue
+}
+
+
+
+
+.station-name {
+    border-radius: 20px;
+}
+
+.main-name {
+    background-color: #172E7A;
+    color: white;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 5px 15px 0 15px;
+    text-align: center;
+}
+
+.sub-name {
+    background-color: #643813;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: normal;
+    padding: 2px 15px 0px 15px;
+    text-align: center;
 }
