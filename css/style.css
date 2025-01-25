@@ -1,6 +1,6 @@
 :root {
-    --cardWidth: 670px;
-    --cardHeight: 200px;
+    --cardWidth: 700px;
+    --cardHeight: 160px;
 }
 
 @font-face {
@@ -32,7 +32,6 @@ div#card {
     display: flex;
     width: var(--cardWidth);
     height: var(--cardHeight);
-    padding-left: 40px;
     align-items: center;
     gap: 50px;
     flex-shrink: 0;
@@ -40,27 +39,24 @@ div#card {
 }
 
 .stop {
+    width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 70px;
-}
-
-.connection {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 10px;
+    /* gap: 70px; */
 }
 
 .line-color {
     min-height: var(--cardHeight);
+    /* height: 100%; */
     width: 18px;
     background-color: white;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    left: 45%;
+    /* transform: translateX(-200%); */
 }
 
 .station-color {
@@ -72,6 +68,16 @@ div#card {
     border: solid 2px black;
 }
 
+
+
+.connection {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    width: calc(var(--cardWidth) / 2);
+}
 
 .connect_transport {
     display: flex;
@@ -91,17 +97,26 @@ div#card {
 
 
 
-.station-name {
-    border-radius: 20px;
+.station-infos {
+    display: flex;
+    justify-content: space-between;
+    text-align: center;
+    align-items: center;
+    width: calc(var(--cardWidth) / 2);
+    border-radius: 10px;
+    gap: 20px
 }
 
 .main-name {
+
     background-color: #172E7A;
     color: white;
-    font-size: 2rem;
+    font-size: 1.8rem;
     font-weight: bold;
-    padding: 5px 15px 0 15px;
+    padding: 5px 15px 5px 15px;
     text-align: center;
+    width: fit-content;
+    /* white-space: pre; */
 }
 
 .sub-name {
@@ -109,6 +124,13 @@ div#card {
     color: white;
     font-size: 0.7rem;
     font-weight: normal;
-    padding: 2px 15px 0px 15px;
+    padding: 2px 15px 2px 15px;
     text-align: center;
+    width: min-content;
+    white-space: pre;
+}
+
+.accessibility {
+    width: 45px;
+    height: 45px;
 }

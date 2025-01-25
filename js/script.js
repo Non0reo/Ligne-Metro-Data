@@ -17,7 +17,8 @@ class Stop {
     constructor(data) {
         this.name = data.name;
         this.subname = data.subname;
-        this.stationID = data.stationID;
+        this.stationZdC = data.stationZdC;
+        this.stationZdA = data.stationZdA;
         this.connections = data.connections;
         this.hasConnections = data.hasConnections;
         this.connectionCount = data.connections.length;
@@ -62,6 +63,17 @@ fetch('js/lignes.json')
             )
         });
 
+        lines.sort(
+            (a, b) => {
+                const nameA = a.lineID.toUpperCase();
+                const nameB = b.lineID.toUpperCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+
+                return 0;
+            }
+        );
+
         loadStops();
     });
 
@@ -69,17 +81,18 @@ fetch('js/lignes.json')
 function loadStops() {
     fetch('js/stops.json')
     .then((response) => response.json())
-    .then((json) => {
+    .then(async (json) => {
         const terminusNames = ['termetro', 'tertram', 'tertrain', 'terrer', 'terval'];
         let stopsRaw = json.filter(stop => lines.some(line => line.lineID === stop.idrefligc));
 
         stopsRaw.forEach((stop, i) => {
-            if (!stops.some(s => s.stationID === stop.id_ref_zdc)) {
+            if (!stops.some(s => s.stationZdC === stop.id_ref_zdc)) {
                 stops.push(
                     new Stop({
                         name: stop.nom_gares,
                         subname: stop.nom_so_gar,
-                        stationID: stop.id_ref_zdc,
+                        stationZdC: stop.id_ref_zdc,
+                        stationZdA: stop.id_ref_zda,
                         connections: [lines.find(line => line.lineID === stop.idrefligc)],
                         hasConnections: false,
                         isAccessible: undefined,
@@ -90,8 +103,18 @@ function loadStops() {
                 );
             }
             else {
-                let declaredStop = stops.find(s => s.stationID === stop.id_ref_zdc);
+                let declaredStop = stops.find(s => s.stationZdC === stop.id_ref_zdc);
                 declaredStop.connections.push(lines.find(line => line.lineID === stop.idrefligc));
+                declaredStop.connections.sort(
+                    (a, b) => {
+                        const nameA = a.lineID.toUpperCase();
+                        const nameB = b.lineID.toUpperCase();
+                        if (nameA < nameB) return -1;
+                        if (nameA > nameB) return 1;
+
+                        return 0;
+                    }
+                );
                 declaredStop.connectionCount = declaredStop.connections.length;
                 declaredStop.terminusFor.push(...terminusNames.filter(term => stop[term] !== '0').map(term => getLineFromName(lineUpperName(stop[term])) ));
                 declaredStop.hasConnections = true;
@@ -99,10 +122,20 @@ function loadStops() {
 
         });
 
-        loadAccessiblity();
+        stops.sort(
+            (a, b) => {
+                const nameA = a.name.toUpperCase();
+                const nameB = b.name.toUpperCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+
+                return 0;
+            }
+        );
+
+        await loadAccessiblity();
 
         lines.forEach(line => {
-            console.log(line);
 
             //transform stops into LineStop objects
             line.stops = stops.filter(stop => stop.connections.some(connection => connection.lineID === line.lineID)).map(stop => {
@@ -127,7 +160,7 @@ function loadStops() {
 
             //J'en ai chié pour trouver les lignes d'en dessous        
             // const firstStop = line.stops[0];
-            // let possibleStopList = stopsRaw.filter(stop => firstStop.stationID === stop.id_ref_zdc && firstStop.connections.some(connection => connection.name === line.name));
+            // let possibleStopList = stopsRaw.filter(stop => firstStop.stationZdC === stop.id_ref_zdc && firstStop.connections.some(connection => connection.name === line.name));
             // line.upperName = possibleStopList.filter(stop => stop.idrefligc === line.lineID)[0].res_com;
             line.stopCount = line.stops.length;
         });
@@ -149,9 +182,13 @@ async function loadAccessiblity() {
     .then((response) => response.json())
     .then((json) => {
         stops.forEach(stop => {
-            let accessibilityRaw = json.filter(accessibility => stop.stationID.toString() === accessibility.stop_point_id.replace('stop_point:IDFM:monomodalStopPlace:', ''))[0];
+            console.log(stop.stationZdA, stop.name);
+            let accessibilityRaw = json.filter(accessibility => stop.stationZdA.toString() === accessibility.stop_point_id.replace('stop_point:IDFM:monomodalStopPlace:', ''))[0];
+            console.log(accessibilityRaw);
             if (accessibilityRaw) {
+                
                 stop.accessibilityLevel = accessibilityRaw.accessibility_level_id;
+                console.log('accessibility', accessibilityRaw.accessibility_level_id, stop.accessibilityLevel);
             }
         });
     });
@@ -174,10 +211,10 @@ function loadShapes(line) {
                 fromStop: getLineStop(stopFromGeoPoint(coordinates[0][0], coordinates[0][1]), line),
                 toStop: getLineStop(stopFromGeoPoint(coordinates[coordinates.length - 1][0], coordinates[coordinates.length - 1][1]), line),
                 get fromStopID() {
-                    if(this.fromStop) return this.fromStop.stationID;
+                    if(this.fromStop) return this.fromStop.stationZdC;
                 },
                 get toStopID() {
-                    if(this.toStop) return this.toStop.stationID;
+                    if(this.toStop) return this.toStop.stationZdC;
                 }
             }
             sectionList.push(section);
@@ -185,8 +222,8 @@ function loadShapes(line) {
 
         line.sections = sectionList;
         line.sections.forEach((section, i) => {
-            let lineStop1 = line.stops.find(stop => stop.stationID === section.fromStopID);
-            let lineStop2 = line.stops.find(stop => stop.stationID === section.toStopID);
+            let lineStop1 = line.stops.find(stop => stop.stationZdC === section.fromStopID);
+            let lineStop2 = line.stops.find(stop => stop.stationZdC === section.toStopID);
 
             if(lineStop1 && lineStop1 != lineStop2) lineStop1.next.push(lineStop2);
             if(lineStop2 && lineStop1 != lineStop2) lineStop2.previous.push(lineStop1);
@@ -205,7 +242,7 @@ getLineFromName = (name) => {
 }
 
 getLineStop = (stop, line) => { 
-    return line.stops.find(s => s.stationID === stop.stationID);
+    return line.stops.find(s => s.stationZdC === stop.stationZdC);
 }
 
 //get the closest stop from a geopoint
