@@ -21,11 +21,15 @@
     font-weight: normal;
 }
 
+html {
+    display: flex;
+    flex-direction: column;
+}
+
 body {
     font-family: 'IDF Voyager';
     background-color: #292C33;
 }
-
 
 
 div#card {
