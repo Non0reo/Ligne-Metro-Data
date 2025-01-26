@@ -58,7 +58,7 @@ fetch('js/lignes.json')
                     color: line.colourweb_hexa,
                     picto: line.picto,
                     mode: line.shortname_groupoflines.includes('RER') ? 'rer' : line.transportmode,
-                    isAccessible: line.accessibility,
+                    isAccessible: line.accessibility === 'true',
                 })
             )
         });
@@ -182,13 +182,9 @@ async function loadAccessiblity() {
     .then((response) => response.json())
     .then((json) => {
         stops.forEach(stop => {
-            console.log(stop.stationZdA, stop.name);
             let accessibilityRaw = json.filter(accessibility => stop.stationZdA.toString() === accessibility.stop_point_id.replace('stop_point:IDFM:monomodalStopPlace:', ''))[0];
-            console.log(accessibilityRaw);
             if (accessibilityRaw) {
-                
                 stop.accessibilityLevel = accessibilityRaw.accessibility_level_id;
-                console.log('accessibility', accessibilityRaw.accessibility_level_id, stop.accessibilityLevel);
             }
         });
     });

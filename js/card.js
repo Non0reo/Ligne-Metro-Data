@@ -68,9 +68,6 @@ function appendConnections(stop) {
                 connectionTrain.appendChild(connectedLine);
                 break;
         }
-        
-
-        console.log(connection);
     });
 }
 
@@ -140,9 +137,9 @@ function setStopAccessibility(stop) {
     const stationInfoDiv = document.querySelector('.station-infos');
 
     let accessibilityElement = document.createElement('img');
-    console.log(stop.accessibilityLevel >= 5 || stop.line.isAccessible);
-    accessibilityElement.src = stop.accessibilityLevel >= 5 || stop.line.isAccessible ? 'assets/icons/Accessible_UFR_RVB.svg' : 'assets/icons/Non_accessible_UFR_RVB.svg';
+    accessibilityElement.src = stop.accessibilityLevel >= 4 || stop.line.isAccessible ? 'assets/icons/Accessible_UFR_RVB.svg' : 'assets/icons/Non_accessible_UFR_RVB.svg';;
     accessibilityElement.alt = stop.accessibilityLevel;
+    accessibilityElement.setAttribute('title', stop.accessibilityLevel);
     accessibilityElement.classList.add('accessibility');
     stationInfoDiv.appendChild(accessibilityElement);
 }
