@@ -166,6 +166,9 @@ function changeCard(stop, card) {
     setStopAccessibility(stop, card);
 }
 
+
+
+//creerCarte
 function createCard() {
     let card = document.createElement('div');
     card.classList.add('card');
@@ -194,6 +197,7 @@ function createCard() {
     return document.querySelectorAll('.card').length - 1;
 }
 
+//creerCarte prend en entrée les stops
 function addCards(stops) {
     stops.forEach(stop => {
         let card = createCard();
