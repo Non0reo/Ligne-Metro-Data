@@ -46,7 +46,7 @@ const acceptedTransportModes = ['metro', 'tramway', 'rail', 'funicular'];
 let lines = [];
 let stops = [];
 
-fetch('js/lignes.json')
+fetch('js/data/lignes.json')
     .then((response) => response.json())
     .then((json) => {
         let linesRaw = json.filter(line => acceptedTransportModes.includes(line.transportmode) && line.transportsubmode !== 'regionalRail');
@@ -79,7 +79,7 @@ fetch('js/lignes.json')
 
 
 function loadStops() {
-    fetch('js/stops.json')
+    fetch('js/data/stops.json')
     .then((response) => response.json())
     .then(async (json) => {
         const terminusNames = ['termetro', 'tertram', 'tertrain', 'terrer', 'terval'];
@@ -173,12 +173,18 @@ function loadStops() {
 
             line.terminus = line.stops.filter(stop => stop.isTerminusOfLine); //set line terminus
         });
+
+        //remove lines that have no terminus
+        lines = lines.filter(line => line.terminus.length > 0);
         
+
+        console.log('lines', lines);
+        loadSearchResults();
     });
 }
 
 async function loadAccessiblity() {
-    await fetch('js/accessibility.json')
+    await fetch('js/data/accessibility.json')
     .then((response) => response.json())
     .then((json) => {
         stops.forEach(stop => {
@@ -191,7 +197,7 @@ async function loadAccessiblity() {
 }
 
 function loadShapes(line) {
-    fetch('js/shapes.json')
+    fetch('js/data/shapes.json')
     .then((response) => response.json())
     .then((json) => {
 
@@ -224,7 +230,6 @@ function loadShapes(line) {
             if(lineStop1 && lineStop1 != lineStop2) lineStop1.next.push(lineStop2);
             if(lineStop2 && lineStop1 != lineStop2) lineStop2.previous.push(lineStop1);
         });
-
     });
 }
 

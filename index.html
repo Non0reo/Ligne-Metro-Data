@@ -8,7 +8,15 @@
     <script src="js/script.js"></script>
 </head>
 <body>
-    <div id="card">
+    <div id="info">
+        <label for="search-line">Select a Line:</label>
+        <select name="lines" id="search-line"></select>
+        <label for="search-station">Search a Station:</label>
+        <select name="stations" id="search-station"></select>
+        <button type="button" id="search-button">Search</button>
+    </div>
+
+    <div class="card">
         <div class="stop">
             <div class="line-color">
                 <div class="station-color"></div>
@@ -27,12 +35,10 @@
                     <div class="sub-name"></div>
                 </div>
             </div>
+        </div>
     </div>
 
-    <input type="text" id="search-station" placeholder="Station">
-    <input type="text" id="search-line" placeholder="Line">
-    <button type="button">Search</button>
-
     <script src="js/card.js"></script>
+    <script src="js/search.js"></script>
 </body>
 </html>

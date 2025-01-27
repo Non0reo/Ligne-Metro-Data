@@ -1,22 +1,19 @@
-const connectionMetro = document.querySelector('.connect_metro');
-const connectionRER = document.querySelector('.connect_rer');
-const connectionTrain = document.querySelector('.connect_train');
-const connectionDiv = document.querySelector('.connection');
-
-let actualStop;
-
-
-function appendConnections(stop) {
+function appendConnections(stop, card) {
     let connections = stop.connections;
     connections = connections.filter(connection => connection.lineID !== stop.line.lineID);
 
+    const connectionMetro = document.querySelectorAll('.connect_metro')[card];
+    const connectionRER = document.querySelectorAll('.connect_rer')[card];
+    const connectionTrain = document.querySelectorAll('.connect_train')[card];
     const allConnection = document.querySelectorAll('.connect_transport');
-    allConnection.forEach(connection => {
+
+    for (let i = card * 3; i < card * 3 + 3; i++) {
+        const connection = allConnection[i];
         connection.style.display = 'none';
         while (connection.firstChild) {
             connection.removeChild(connection.firstChild);
         }
-    });
+    }
 
     const hasMetro = connections.some(connection => connection.mode.includes('metro'));
     const hasRER = connections.some(connection => connection.mode.includes('rer'));
@@ -53,6 +50,13 @@ function appendConnections(stop) {
         connectedLine.src = `${connection.picto.url}`;
         connectedLine.alt = connection.lineID;
         connectedLine.classList.add('connected-line');
+        connectedLine.addEventListener('click', () => {
+            removeCards();
+            console.log(connection);
+            let stops = stopsInOrder(connection);
+            console.log(stops);
+            addCards(stops);
+        });
     
         switch(connection.mode) {
             case 'metro':
@@ -71,11 +75,20 @@ function appendConnections(stop) {
     });
 }
 
-function changeLine(stop) {
-    const lineColor = document.querySelector('.line-color');  
-    const stationColor = document.querySelector('.station-color');
+function changeLine(stop, card) {
+    const lineColor = document.querySelectorAll('.line-color')[card];  
+    const stationColor = document.querySelectorAll('.station-color')[card];
     
-    lineColor.style.backgroundColor = `#${stop.line.color}`;
+    if(card === 0 && stop.isTerminusOfLine) {
+        lineColor.style.background = `linear-gradient(180deg, transparent 50%, #${stop.line.color} 51%)`;
+    } else if(stop.line.terminus[1] === stop) {
+        lineColor.style.background = `linear-gradient(0deg, transparent 50%, #${stop.line.color} 51%)`;
+    } else {
+        lineColor.style.background = `#${stop.line.color}`;
+    }
+
+    //console.log(stop.isTerminusOfLine, card, stop.line.terminus[1] === stop);
+    
     stationColor.style.border = `2px solid black`;
 
     let connections = stop.connections;
@@ -96,8 +109,8 @@ function changeLine(stop) {
 }
 
 
-function setStopName(stop) {
-    const stationInfoDiv = document.querySelector('.station-infos');
+function setStopName(stop, card) {
+    const stationInfoDiv = document.querySelectorAll('.station-infos')[card];
     while (stationInfoDiv.firstChild) {
         stationInfoDiv.removeChild(stationInfoDiv.firstChild);
     }
@@ -110,15 +123,16 @@ function setStopName(stop) {
     stopName.classList.add('main-name');
     stopSubName.classList.add('sub-name');
 
-    stationInfoDiv.appendChild(stationName);
-    stationName.appendChild(stopName);
-    stationName.appendChild(stopSubName)
-
 
     let mainNameElement = document.createElement('span');
     mainNameElement.textContent = stop.name;
     
-    stopName.appendChild(mainNameElement)
+    stopName.appendChild(mainNameElement);
+    stationInfoDiv.appendChild(stationName);
+    stationName.appendChild(stopName);
+
+    stopSubName.style.maxWidth = stopName.clientWidth + 'px';
+    stationName.appendChild(stopSubName)
     
 ;
     if(stop.subname === null) {
@@ -133,8 +147,8 @@ function setStopName(stop) {
     }
 }
 
-function setStopAccessibility(stop) {
-    const stationInfoDiv = document.querySelector('.station-infos');
+function setStopAccessibility(stop, card) {
+    const stationInfoDiv = document.querySelectorAll('.station-infos')[card];
 
     let accessibilityElement = document.createElement('img');
     accessibilityElement.src = stop.accessibilityLevel >= 4 || stop.line.isAccessible ? 'assets/icons/Accessible_UFR_RVB.svg' : 'assets/icons/Non_accessible_UFR_RVB.svg';;
@@ -145,19 +159,51 @@ function setStopAccessibility(stop) {
 }
 
 
-function changeCard(stop) {
-    appendConnections(stop);
-    changeLine(stop);
-    setStopName(stop);
-    setStopAccessibility(stop);
+function changeCard(stop, card) {
+    appendConnections(stop, card);
+    changeLine(stop, card);
+    setStopName(stop, card);
+    setStopAccessibility(stop, card);
+}
+
+function createCard() {
+    let card = document.createElement('div');
+    card.classList.add('card');
+    card.innerHTML = `
+            <div class="stop">
+            <div class="line-color">
+                <div class="station-color"></div>
+            </div>
+
+            <div class="connection">
+                <div class="connect_transport connect_metro"></div>
+                <div class="connect_transport connect_rer"></div>
+                <div class="connect_transport connect_train"></div>
+            </div>
+
+
+            <div class="station-infos">
+                <div id="station-name">
+                    <div class="main-name"></div>
+                    <div class="sub-name"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(card);
+    return document.querySelectorAll('.card').length - 1;
+}
+
+function addCards(stops) {
+    stops.forEach(stop => {
+        let card = createCard();
+        changeCard(stop, card);
+    });
+}
+
+function removeCards() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => card.remove());
 }
 
 
-setTimeout(() => {
-    let actualStop = getLineStop(getStopFromName('La Défense'), getLineFromName('RER A'));
-    // let actualStop = getLineStop(getStopFromName('Cormeilles-en-Parisis'), getLineFromName('Transilien J'))
-    //let actualStop = getLineStop(getStopFromName('Rambuteau'), getLineFromName('11'));
-    // let actualStop = getLineStop(getStopFromName('Saint-Lazare'), getLineFromName('Transilien J'));
-    // let actualStop = getLineStop(getStopFromName('Châtelet'), getLineFromName('1'));
-    changeCard(actualStop);
-}, 200);
