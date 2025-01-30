@@ -11,3 +11,9 @@ Data visualisation using IDFM api. Only work with simple lines for now (Does not
 [reférentiel-des-lignes](https://data.iledefrance-mobilites.fr/explore/dataset/referentiel-des-lignes/information) -> lignes.json
 
 ---
+
+
+
+TODO:
+- Small format: Add description to station using wikipedia
+- Big format: Add a map of paris and map every sation of a line on it using GPS locations
